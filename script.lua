@@ -196,7 +196,15 @@ local function setCharacterTouch(char, state)
     end
 end
 local blockedWords = {"shop", "store", "crate", "general", "craft", "npc", "merchant", "sell", "market", "land", "tile", "territory", "expand", "unlock", "buy", "магазин", "купить", "открыть", "продать", "ящик", "%$"}
-local resourceWords = {"золото", "gold", "iron", "железо", "flour", "мука", "wheat", "пшеница", "carrot", "морков", "uran", "уран", "wood", "дерево", "stone", "камень", "oil", "нефть", "coal", "уголь"}
+local allowWords = {
+    "wheat", "пшениц", "corn", "кукуруз", "coal", "угол", "tree", "wood", "дерев", "древес",
+    "windmill", "flour", "мук", "carrot", "морков", "library", "book", "книг", "библиотек",
+    "oil", "нефт", "iron", "желез", "cement", "цемент", "gold", "золот", "bank", "банк", "cash", "money", "деньг",
+    "research", "science", "наук", "исслед", "diamond", "алмаз", "uran", "уран", "nuclear", "ядер",
+    "data", "данн", "blackhole", "черн", "дыр", "area", "51", "alien", "пришел",
+    "antimatter", "антиматер", "quantum", "квант", "supernova", "сверхнов", "gamma", "гамма",
+    "anomaly", "аномал", "fusion", "синтез", "термояд", "energy", "энерг", "power", "planks", "доск", "stone", "камен"
+}
 local function hasAnyWord(text, list)
     for _, word in ipairs(list) do
         if string.find(text, word) then return true end
@@ -214,15 +222,17 @@ local function collectAllResources()
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("ProximityPrompt") and obj.Enabled then
             local pos = getPromptPosition(obj)
-            if pos and (pos - savedCFrame.Position).Magnitude <= 145 then
+            if pos and (pos - savedCFrame.Position).Magnitude <= 220 then
                 local combined = string.lower(obj.ActionText .. " " .. obj.ObjectText)
                 local fullPath = string.lower(obj:GetFullName())
-                if hasAnyWord(combined, resourceWords) and not hasAnyWord(fullPath, blockedWords) and not hasAnyWord(combined, blockedWords) then
+                local hasCollect = string.find(combined, "собрать") or string.find(combined, "collect")
+                if (hasCollect or hasAnyWord(combined, allowWords) or hasAnyWord(fullPath, allowWords)) and not hasAnyWord(fullPath, blockedWords) and not hasAnyWord(combined, blockedWords) then
                     table.insert(targets, {prompt = obj, pos = pos})
                 end
             end
         end
     end
+
     CollectButton.Text = "🎄 Сбор (" .. #targets .. ")..."
     CollectButton.BackgroundColor3 = Color3.fromRGB(215, 145, 35)
     setCharacterTouch(char, false)
