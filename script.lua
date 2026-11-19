@@ -1,8 +1,10 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
 local Player = Players.LocalPlayer
 local isMinimized = false
 local isCollecting = false
+local antiAfkEnabled = false
 if game:GetService("CoreGui"):FindFirstChild("XeclerMiniWarGui") then
     game:GetService("CoreGui").XeclerMiniWarGui:Destroy()
 end
@@ -11,7 +13,7 @@ ScreenGui.Name = "XeclerMiniWarGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = game:GetService("CoreGui")
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 240, 0, 108)
+MainFrame.Size = UDim2.new(0, 240, 0, 154)
 MainFrame.Position = UDim2.new(0.05, 0, 0.35, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(16, 26, 44)
 MainFrame.BorderSizePixel = 0
@@ -74,9 +76,9 @@ local function createBulb(xPos, yPos, idx)
     table.insert(bulbs, Bulb)
 end
 for i = 1, 9 do createBulb((i * 23) - 6, 4, i) end
-for i = 1, 4 do
-    createBulb(6, 12 + (i * 12), i + 1)
-    createBulb(228, 12 + (i * 12), i + 3)
+for i = 1, 7 do
+    createBulb(6, 10 + (i * 13), i + 1)
+    createBulb(228, 10 + (i * 13), i + 3)
 end
 task.spawn(function()
     local step = 0
@@ -89,8 +91,8 @@ task.spawn(function()
     end
 end)
 local CollectButton = Instance.new("TextButton")
-CollectButton.Size = UDim2.new(1, -36, 0, 40)
-CollectButton.Position = UDim2.new(0, 18, 0, 18)
+CollectButton.Size = UDim2.new(1, -36, 0, 38)
+CollectButton.Position = UDim2.new(0, 18, 0, 16)
 CollectButton.BackgroundColor3 = Color3.fromRGB(34, 145, 72)
 CollectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CollectButton.Font = Enum.Font.Gotham
@@ -104,6 +106,22 @@ local CollectStroke = Instance.new("UIStroke")
 CollectStroke.Color = Color3.fromRGB(130, 240, 165)
 CollectStroke.Thickness = 1
 CollectStroke.Parent = CollectButton
+local AntiAfkButton = Instance.new("TextButton")
+AntiAfkButton.Size = UDim2.new(1, -36, 0, 38)
+AntiAfkButton.Position = UDim2.new(0, 18, 0, 62)
+AntiAfkButton.BackgroundColor3 = Color3.fromRGB(165, 45, 52)
+AntiAfkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AntiAfkButton.Font = Enum.Font.Gotham
+AntiAfkButton.TextSize = 13
+AntiAfkButton.Text = "🛡️ Anti-AFK: ВЫКЛ"
+AntiAfkButton.Parent = ContentFrame
+local AfkCorner = Instance.new("UICorner")
+AfkCorner.CornerRadius = UDim.new(0, 8)
+AfkCorner.Parent = AntiAfkButton
+local AfkStroke = Instance.new("UIStroke")
+AfkStroke.Color = Color3.fromRGB(240, 130, 135)
+AfkStroke.Thickness = 1
+AfkStroke.Parent = AntiAfkButton
 local function minimizeMenu()
     if not isMinimized then
         isMinimized = true
@@ -115,7 +133,7 @@ end
 local function expandMenu()
     if isMinimized then
         isMinimized = false
-        MainFrame.Size = UDim2.new(0, 240, 0, 108)
+        MainFrame.Size = UDim2.new(0, 240, 0, 154)
         ContentFrame.Visible = true
         MinButton.Visible = true
     end
@@ -141,6 +159,26 @@ UserInputService.InputEnded:Connect(function(input)
     if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and draggingMenu then
         draggingMenu = false
         if isMinimized and not wasDragged then expandMenu() end
+    end
+end)
+AntiAfkButton.MouseButton1Click:Connect(function()
+    antiAfkEnabled = not antiAfkEnabled
+    if antiAfkEnabled then
+        AntiAfkButton.Text = "🛡️ Anti-AFK: ВКЛ"
+        AntiAfkButton.BackgroundColor3 = Color3.fromRGB(45, 135, 210)
+        AfkStroke.Color = Color3.fromRGB(145, 210, 255)
+    else
+        AntiAfkButton.Text = "🛡️ Anti-AFK: ВЫКЛ"
+        AntiAfkButton.BackgroundColor3 = Color3.fromRGB(165, 45, 52)
+        AfkStroke.Color = Color3.fromRGB(240, 130, 135)
+    end
+end)
+Player.Idled:Connect(function()
+    if antiAfkEnabled then
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
     end
 end)
 local function getPromptPosition(prompt)
